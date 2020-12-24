@@ -195,13 +195,23 @@ env.AppendUnique(
 # Since files in framework  most likely won't change, the
 # paths are added directly to CCFLAGS instead of CPPPATH
 
+inc_paths = [
+    os.path.join(FRAMEWORK_DIR, d)
+    for d in configuration.get("inc_dirs")
+    if not os.path.isabs(d)
+]
+framework_path = shorten_path(FRAMEWORK_DIR) if WINDOWS else FRAMEWORK_DIR
+
+if WINDOWS:
+    inc_paths = process_paths(inc_paths)
+
 env.Append(
-    CCFLAGS=[
+    CCFLAGS=["-iprefix", framework_path]
+    + [
         long_incflags_hook(
             [
-                '-I"%s"' % shorten_path(os.path.join(FRAMEWORK_DIR, d))
-                for d in configuration.get("inc_dirs")
-                if not os.path.isabs(d)
+                "-iwithprefixbefore" + inc.replace(framework_path, "/")
+                for inc in inc_paths
             ]
         )
     ]
